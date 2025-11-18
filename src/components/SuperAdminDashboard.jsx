@@ -24,7 +24,7 @@ const SuperAdminDashboard = ({
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState('overview'); // overview, officers, categoryChanges, complaints
+  const [activeTab, setActiveTab] = useState('complaints'); // Default to 'complaints' to show all complaints first
   const [showCreateOfficer, setShowCreateOfficer] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [adminRemark, setAdminRemark] = useState('');
@@ -332,14 +332,17 @@ const SuperAdminDashboard = ({
 
             <button
               onClick={() => setActiveTab('complaints')}
-              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors relative ${
                 activeTab === 'complaints'
                   ? 'bg-purple-500 text-white'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <AlertCircle size={20} className="inline mr-2" />
-              All Complaints ({stats.totalComplaints})
+              All Complaints
+              <span className="ml-2 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                {stats.totalComplaints}
+              </span>
             </button>
 
             <button
