@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import RoleSelector from './components/RoleSelector';
 import RuralKiosk from './components/RuralKiosk';
 import OfficerPortal from './components/OfficerPortal';
@@ -9,8 +10,9 @@ import { initialOfficers, departments } from './data/initialOfficers';
 import { initialComplaints } from './data/initialComplaints';
 import { assignToOfficer, updateOfficerCounts, getDepartmentLabel } from './utils/assignmentLogic';
 
-function App() {
-  const [currentRole, setCurrentRole] = useState(null);
+function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [officers, setOfficers] = useState(initialOfficers);
   const [complaints, setComplaints] = useState(initialComplaints);
 
@@ -150,60 +152,83 @@ function App() {
   };
 
   const handleRoleSelection = (role) => {
-    setCurrentRole(role);
+    navigate(`/${role}`);
   };
 
   const handleBack = () => {
-    setCurrentRole(null);
+    navigate(-1); // Go back in history
   };
+
+  // Check if we're on a portal page (not home)
+  const isOnPortal = location.pathname !== '/';
 
   return (
     <div className="App">
-      {!currentRole && (
-        <RoleSelector onSelectRole={handleRoleSelection} />
-      )}
+      <Routes>
+        <Route path="/" element={<RoleSelector onSelectRole={handleRoleSelection} />} />
 
-      {currentRole === 'kiosk' && (
-        <RuralKiosk
-          onBack={handleBack}
-          onSubmitComplaint={handleSubmitComplaint}
+        <Route
+          path="/kiosk"
+          element={
+            <RuralKiosk
+              onBack={handleBack}
+              onSubmitComplaint={handleSubmitComplaint}
+            />
+          }
         />
-      )}
 
-      {currentRole === 'officer' && (
-        <OfficerPortal
-          officers={officers}
-          complaints={complaints}
-          onBack={handleBack}
-          onUpdateComplaint={handleUpdateComplaint}
-          onRequestCategoryChange={handleRequestCategoryChange}
+        <Route
+          path="/officer"
+          element={
+            <OfficerPortal
+              officers={officers}
+              complaints={complaints}
+              onBack={handleBack}
+              onUpdateComplaint={handleUpdateComplaint}
+              onRequestCategoryChange={handleRequestCategoryChange}
+            />
+          }
         />
-      )}
 
-      {currentRole === 'admin' && (
-        <SuperAdminDashboard
-          officers={officers}
-          complaints={complaints}
-          onBack={handleBack}
-          onCreateOfficer={handleCreateOfficer}
-          onApproveCategoryChange={handleApproveCategoryChange}
-          onDeleteOfficer={handleDeleteOfficer}
-          onResetPassword={handleResetPassword}
-          onReassignComplaint={handleReassignComplaint}
-          onUpdateComplaint={handleUpdateComplaint}
+        <Route
+          path="/admin"
+          element={
+            <SuperAdminDashboard
+              officers={officers}
+              complaints={complaints}
+              onBack={handleBack}
+              onCreateOfficer={handleCreateOfficer}
+              onApproveCategoryChange={handleApproveCategoryChange}
+              onDeleteOfficer={handleDeleteOfficer}
+              onResetPassword={handleResetPassword}
+              onReassignComplaint={handleReassignComplaint}
+              onUpdateComplaint={handleUpdateComplaint}
+            />
+          }
         />
-      )}
 
-      {currentRole === 'citizen' && (
-        <CitizenPortal
-          complaints={complaints}
-          onBack={handleBack}
+        <Route
+          path="/citizen"
+          element={
+            <CitizenPortal
+              complaints={complaints}
+              onBack={handleBack}
+            />
+          }
         />
-      )}
+      </Routes>
 
-      {/* ChatBot available in all portals */}
-      {currentRole && <ChatBot />}
+      {/* ChatBot available in all portals except home */}
+      {isOnPortal && <ChatBot />}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 
