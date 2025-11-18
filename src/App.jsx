@@ -13,8 +13,26 @@ import { assignToOfficer, updateOfficerCounts, getDepartmentLabel } from './util
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [officers, setOfficers] = useState(initialOfficers);
-  const [complaints, setComplaints] = useState(initialComplaints);
+
+  // Initialize from localStorage or use initial data
+  const [officers, setOfficers] = useState(() => {
+    const saved = localStorage.getItem('civic_officers');
+    return saved ? JSON.parse(saved) : initialOfficers;
+  });
+
+  const [complaints, setComplaints] = useState(() => {
+    const saved = localStorage.getItem('civic_complaints');
+    return saved ? JSON.parse(saved) : initialComplaints;
+  });
+
+  // Save to localStorage whenever data changes
+  React.useEffect(() => {
+    localStorage.setItem('civic_officers', JSON.stringify(officers));
+  }, [officers]);
+
+  React.useEffect(() => {
+    localStorage.setItem('civic_complaints', JSON.stringify(complaints));
+  }, [complaints]);
 
   // Update officer counts whenever complaints change
   React.useEffect(() => {
