@@ -10,21 +10,26 @@ A complete municipal complaint management system with AI-powered voice interacti
 - Real-time visual feedback during voice interaction
 - Automatic photo capture simulation
 - AI-powered category detection
+- **No login required** - Accessible to all citizens
 
-### 2. **Officer Portal**
-- Secure login system for municipal officers
+### 2. **Officer Portal** 🔐
+- **Secure login system** with username/password authentication
 - Dashboard with complaint statistics
 - Status management (pending → in-progress → resolved)
 - Mandatory remark system for status updates
 - Category change request feature
 - Complete remark history tracking
+- View only assigned complaints (department-specific)
+- Logout functionality
 
-### 3. **Super Admin Dashboard**
+### 3. **Super Admin Dashboard** 🔒
+- **Strong authentication** with admin credentials
 - System-wide overview and statistics
 - Officer management (create, view, track workload)
 - Category change approval workflow
 - Department-wise complaint distribution
 - Real-time monitoring
+- Secure logout with session management
 
 ### 4. **Citizen Portal**
 - Public transparency - view all complaints
@@ -69,15 +74,21 @@ http://localhost:3000
 
 ## 🎯 Demo Credentials
 
-### Officer Portal Login:
+### 🔐 Super Admin Login:
+- **Username**: `superadmin`
+- **Password**: `admin@2025`
+
+### 👮 Officer Portal Login:
 - **Electricity Dept**: `raj.patil` / `pass123`
 - **Water Supply Dept**: `priya.sharma` / `pass123`
 - **Medical Dept**: `amit.kumar` / `pass123`
 - **Road Maintenance**: `sunita.d` / `pass123`
 - **Garbage Collection**: `vikas.y` / `pass123`
+- **Infrastructure Dept**: `ramesh.k` / `pass123`
+- **Safety/Security Dept**: `deepak.s` / `pass123`
 
-### Super Admin:
-- No login required - direct access
+### 🏛️ Citizen Portal:
+- No login required - public access for transparency
 
 ## 🔧 Tech Stack
 

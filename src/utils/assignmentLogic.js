@@ -1,9 +1,14 @@
 // Auto-assign complaints to officers based on department and workload
 export const assignToOfficer = (department, officers, complaints) => {
+  console.log('🔄 Auto-assigning complaint to department:', department);
+
   // Find officers in the specified department
   const deptOfficers = officers.filter(o => o.department === department);
 
+  console.log(`👥 Found ${deptOfficers.length} officers in ${department} department`);
+
   if (deptOfficers.length === 0) {
+    console.warn(`⚠️ No officers found for ${department}, assigning to first available officer`);
     // No officers in this department - assign to first available officer
     return officers[0]?.id || null;
   }
@@ -24,6 +29,8 @@ export const assignToOfficer = (department, officers, complaints) => {
   const leastBusy = officerWorkload.reduce((min, officer) =>
     officer.currentActiveComplaints < min.currentActiveComplaints ? officer : min
   );
+
+  console.log(`✅ Assigned to officer: ${leastBusy.name} (${leastBusy.id}) with ${leastBusy.currentActiveComplaints} active complaints`);
 
   return leastBusy.id;
 };

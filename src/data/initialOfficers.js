@@ -38,6 +38,22 @@ export const initialOfficers = [
     username: "vikas.y",
     password: "pass123",
     activeComplaints: 0
+  },
+  {
+    id: "officer6",
+    name: "Ramesh Kulkarni",
+    department: "infrastructure",
+    username: "ramesh.k",
+    password: "pass123",
+    activeComplaints: 0
+  },
+  {
+    id: "officer7",
+    name: "Deepak Singh",
+    department: "safety",
+    username: "deepak.s",
+    password: "pass123",
+    activeComplaints: 0
   }
 ];
 
