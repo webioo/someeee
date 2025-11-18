@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, UserPlus, Users, FileText, CheckCircle, XCircle, Shield, LogOut } from 'lucide-react';
+import { ArrowLeft, UserPlus, Users, FileText, CheckCircle, XCircle, Shield, LogOut, Trash2, Key, Edit, UserX, AlertCircle, Clock, MapPin, User as UserIcon } from 'lucide-react';
 import { getDepartmentIcon, getPriorityColor, getStatusColor } from '../utils/categoryDetection';
 import { departments } from '../data/initialOfficers';
 
@@ -9,13 +9,25 @@ const SUPER_ADMIN = {
   password: 'admin@2025'
 };
 
-const SuperAdminDashboard = ({ officers, complaints, onBack, onCreateOfficer, onApproveCategoryChange }) => {
+const SuperAdminDashboard = ({
+  officers,
+  complaints,
+  onBack,
+  onCreateOfficer,
+  onApproveCategoryChange,
+  onDeleteOfficer,
+  onResetPassword,
+  onReassignComplaint,
+  onUpdateComplaint
+}) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState('overview'); // overview, officers, categoryChanges
+  const [activeTab, setActiveTab] = useState('overview'); // overview, officers, categoryChanges, complaints
   const [showCreateOfficer, setShowCreateOfficer] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [adminRemark, setAdminRemark] = useState('');
   const [newOfficer, setNewOfficer] = useState({
     name: '',
     department: '',
@@ -93,6 +105,71 @@ const SuperAdminDashboard = ({ officers, complaints, onBack, onCreateOfficer, on
   const handleRejectCategoryChange = (complaintId) => {
     onApproveCategoryChange(complaintId, null); // Pass null to reject
     alert('❌ Category change request rejected!');
+  };
+
+  // Delete Officer
+  const handleDeleteOfficer = (officerId, officerName) => {
+    if (window.confirm(`⚠️ Are you sure you want to delete officer "${officerName}"?\n\nThis action cannot be undone!`)) {
+      onDeleteOfficer(officerId);
+      alert(`✅ Officer "${officerName}" deleted successfully!`);
+    }
+  };
+
+  // Reset Password
+  const handleResetPassword = (officerId, officerName) => {
+    const newPassword = prompt(`Reset password for "${officerName}"\n\nEnter new password:`);
+    if (newPassword && newPassword.trim()) {
+      onResetPassword(officerId, newPassword.trim());
+      alert(`✅ Password reset successfully for "${officerName}"!\n\nNew password: ${newPassword.trim()}`);
+    } else if (newPassword !== null) {
+      alert('❌ Password cannot be empty!');
+    }
+  };
+
+  // Reassign Complaint
+  const handleReassignComplaint = (complaintId, currentOfficer) => {
+    const complaint = complaints.find(c => c.id === complaintId);
+    if (!complaint) return;
+
+    const selectElement = document.getElementById(`reassign-${complaintId}`);
+    const newOfficerId = selectElement?.value;
+
+    if (!newOfficerId || newOfficerId === currentOfficer) {
+      alert('Please select a different officer!');
+      return;
+    }
+
+    const newOfficer = officers.find(o => o.id === newOfficerId);
+    onReassignComplaint(complaintId, newOfficerId, newOfficer.name);
+    alert(`✅ Complaint reassigned to ${newOfficer.name}!`);
+  };
+
+  // Admin Resolve Complaint
+  const handleAdminResolveComplaint = (complaint, newStatus) => {
+    if (!adminRemark.trim()) {
+      alert('❌ Remark is mandatory! Please add a remark before updating status.');
+      return;
+    }
+
+    const updatedRemarks = [
+      ...complaint.remarks,
+      {
+        by: 'superadmin',
+        byName: 'Super Admin',
+        text: adminRemark,
+        timestamp: new Date().toLocaleString('en-IN'),
+        statusChange: `${complaint.status} → ${newStatus}`
+      }
+    ];
+
+    onUpdateComplaint(complaint.id, {
+      status: newStatus,
+      remarks: updatedRemarks
+    });
+
+    setAdminRemark('');
+    setSelectedComplaint(null);
+    alert(`✅ Complaint status updated to "${newStatus}" successfully!`);
   };
 
   // Login Screen
@@ -254,6 +331,18 @@ const SuperAdminDashboard = ({ officers, complaints, onBack, onCreateOfficer, on
             </button>
 
             <button
+              onClick={() => setActiveTab('complaints')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+                activeTab === 'complaints'
+                  ? 'bg-purple-500 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <AlertCircle size={20} className="inline mr-2" />
+              All Complaints ({stats.totalComplaints})
+            </button>
+
+            <button
               onClick={() => setActiveTab('officers')}
               className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
                 activeTab === 'officers'
@@ -332,6 +421,195 @@ const SuperAdminDashboard = ({ officers, complaints, onBack, onCreateOfficer, on
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* All Complaints Tab - Full Management */}
+            {activeTab === 'complaints' && (
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-gray-900">All Complaints - Full Management</h3>
+
+                {complaints.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CheckCircle size={64} className="text-green-500 mx-auto mb-4" />
+                    <p className="text-gray-500 text-xl">No complaints in the system</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {complaints.map(complaint => {
+                      const assignedOfficer = officers.find(o => o.id === complaint.assignedOfficer);
+                      const isSelected = selectedComplaint === complaint.id;
+
+                      return (
+                        <div key={complaint.id} className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200 hover:border-purple-300 transition-all">
+                          {/* Complaint Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-start space-x-4 flex-1">
+                              <div className="text-4xl">{getDepartmentIcon(complaint.category)}</div>
+                              <div className="flex-1">
+                                <h4 className="text-2xl font-bold text-gray-900 mb-2">{complaint.title}</h4>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                  <span className={`${getStatusColor(complaint.status)} text-white px-4 py-1 rounded-full text-sm font-semibold`}>
+                                    {complaint.status.toUpperCase()}
+                                  </span>
+                                  <span className={`${getPriorityColor(complaint.priority)} text-white px-4 py-1 rounded-full text-sm font-semibold`}>
+                                    {complaint.priority.toUpperCase()}
+                                  </span>
+                                </div>
+
+                                {/* Complaint Details */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700 mb-3">
+                                  <div className="flex items-center space-x-2">
+                                    <UserIcon size={16} className="text-gray-400" />
+                                    <span><strong>Citizen:</strong> {complaint.user}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <MapPin size={16} className="text-gray-400" />
+                                    <span><strong>Location:</strong> {complaint.location}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Clock size={16} className="text-gray-400" />
+                                    <span><strong>Submitted:</strong> {complaint.timestamp}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Users size={16} className="text-gray-400" />
+                                    <span><strong>Department:</strong> {complaint.assignedTo}</span>
+                                  </div>
+                                </div>
+
+                                {/* Assigned Officer */}
+                                <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <span className="text-sm font-semibold text-gray-700">Assigned to:</span>
+                                      <span className="ml-2 text-blue-700 font-bold">{assignedOfficer?.name || 'Unknown'}</span>
+                                      <span className="ml-2 text-gray-500 text-sm">({complaint.assignedOfficer})</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Remarks History */}
+                                {complaint.remarks.length > 0 && (
+                                  <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                      <Clock size={16} className="mr-2" />
+                                      Remark History ({complaint.remarks.length}):
+                                    </h5>
+                                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                                      {complaint.remarks.map((remark, idx) => (
+                                        <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                                          <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs font-semibold text-blue-600">{remark.byName}</span>
+                                            <span className="text-xs text-gray-500">{remark.timestamp}</span>
+                                          </div>
+                                          <p className="text-sm text-gray-700">{remark.text}</p>
+                                          {remark.statusChange && (
+                                            <span className="text-xs text-green-600 font-medium mt-1 block">{remark.statusChange}</span>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-sm text-gray-500 mb-2">ID: #{complaint.id}</div>
+                              <button
+                                onClick={() => setSelectedComplaint(isSelected ? null : complaint.id)}
+                                className="text-purple-600 hover:text-purple-700 font-semibold text-sm"
+                              >
+                                {isSelected ? '▲ Hide Actions' : '▼ Show Actions'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Admin Actions Section */}
+                          {isSelected && (
+                            <div className="border-t border-gray-200 pt-4 space-y-4 bg-purple-50 -mx-6 -mb-6 px-6 pb-6 rounded-b-xl">
+                              <h5 className="text-lg font-bold text-purple-900">🛠️ Admin Actions</h5>
+
+                              {/* Reassign Complaint */}
+                              <div className="bg-white rounded-lg p-4 border border-purple-200">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  Reassign to Different Officer:
+                                </label>
+                                <div className="flex gap-2">
+                                  <select
+                                    id={`reassign-${complaint.id}`}
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    defaultValue={complaint.assignedOfficer}
+                                  >
+                                    <option value="">-- Select Officer --</option>
+                                    {officers.map(officer => {
+                                      const dept = departments.find(d => d.value === officer.department);
+                                      return (
+                                        <option key={officer.id} value={officer.id}>
+                                          {officer.name} - {dept?.label} ({officer.activeComplaints} active)
+                                        </option>
+                                      );
+                                    })}
+                                  </select>
+                                  <button
+                                    onClick={() => handleReassignComplaint(complaint.id, complaint.assignedOfficer)}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                                  >
+                                    <Edit size={18} className="inline mr-1" />
+                                    Reassign
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Admin Resolve Complaint */}
+                              {complaint.status !== 'resolved' && (
+                                <div className="bg-white rounded-lg p-4 border border-purple-200">
+                                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Add Remark & Update Status (Mandatory):
+                                  </label>
+                                  <textarea
+                                    value={isSelected ? adminRemark : ''}
+                                    onChange={(e) => setAdminRemark(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mb-3"
+                                    rows="3"
+                                    placeholder="Enter your remark here (mandatory)..."
+                                  />
+                                  <div className="flex gap-3">
+                                    {complaint.status === 'pending' && (
+                                      <button
+                                        onClick={() => handleAdminResolveComplaint(complaint, 'in-progress')}
+                                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                                      >
+                                        <AlertCircle size={20} />
+                                        <span>Start Work</span>
+                                      </button>
+                                    )}
+                                    {(complaint.status === 'pending' || complaint.status === 'in-progress') && (
+                                      <button
+                                        onClick={() => handleAdminResolveComplaint(complaint, 'resolved')}
+                                        className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                                      >
+                                        <CheckCircle size={20} />
+                                        <span>Mark Resolved</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {complaint.status === 'resolved' && (
+                                <div className="bg-green-100 border border-green-400 rounded-lg p-4 flex items-center space-x-2">
+                                  <CheckCircle size={24} className="text-green-600" />
+                                  <span className="text-green-800 font-semibold">✅ This complaint has been resolved</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -465,6 +743,25 @@ const SuperAdminDashboard = ({ officers, complaints, onBack, onCreateOfficer, on
                           <div className="flex items-center justify-between py-2 border-t border-gray-200">
                             <span className="text-gray-600">Active Complaints:</span>
                             <span className="font-bold text-purple-600 text-xl">{officer.activeComplaints}</span>
+                          </div>
+
+                          {/* Officer Actions */}
+                          <div className="pt-4 border-t border-gray-200 flex gap-2">
+                            <button
+                              onClick={() => handleResetPassword(officer.id, officer.name)}
+                              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                            >
+                              <Key size={18} />
+                              <span>Reset Password</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteOfficer(officer.id, officer.name)}
+                              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                            >
+                              <Trash2 size={18} />
+                              <span>Delete</span>
+                            </button>
                           </div>
                         </div>
                       </div>

@@ -108,6 +108,47 @@ function App() {
     );
   };
 
+  // Handle officer deletion from Super Admin
+  const handleDeleteOfficer = (officerId) => {
+    setOfficers(prevOfficers => prevOfficers.filter(o => o.id !== officerId));
+  };
+
+  // Handle password reset from Super Admin
+  const handleResetPassword = (officerId, newPassword) => {
+    setOfficers(prevOfficers =>
+      prevOfficers.map(officer =>
+        officer.id === officerId
+          ? { ...officer, password: newPassword }
+          : officer
+      )
+    );
+  };
+
+  // Handle complaint reassignment from Super Admin
+  const handleReassignComplaint = (complaintId, newOfficerId, newOfficerName) => {
+    setComplaints(prevComplaints =>
+      prevComplaints.map(complaint => {
+        if (complaint.id === complaintId) {
+          return {
+            ...complaint,
+            assignedOfficer: newOfficerId,
+            remarks: [
+              ...complaint.remarks,
+              {
+                by: 'superadmin',
+                byName: 'Super Admin',
+                text: `Complaint reassigned to ${newOfficerName}`,
+                timestamp: new Date().toLocaleString('en-IN'),
+                statusChange: null
+              }
+            ]
+          };
+        }
+        return complaint;
+      })
+    );
+  };
+
   const handleRoleSelection = (role) => {
     setCurrentRole(role);
   };
@@ -146,6 +187,10 @@ function App() {
           onBack={handleBack}
           onCreateOfficer={handleCreateOfficer}
           onApproveCategoryChange={handleApproveCategoryChange}
+          onDeleteOfficer={handleDeleteOfficer}
+          onResetPassword={handleResetPassword}
+          onReassignComplaint={handleReassignComplaint}
+          onUpdateComplaint={handleUpdateComplaint}
         />
       )}
 
