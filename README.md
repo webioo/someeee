@@ -90,6 +90,22 @@ http://localhost:3000
 ### 🏛️ Citizen Portal:
 - No login required - public access for transparency
 
+---
+
+## 🚀 Quick Deploy to Netlify
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/webioo/someeee)
+
+### Simple 3-Step Deployment:
+
+1. **Click** the "Deploy to Netlify" button above
+2. **Connect** your GitHub account and authorize Netlify
+3. **Deploy** - Your app will be live in 2-3 minutes!
+
+**📖 Detailed Guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete instructions
+
+---
+
 ## 🔧 Tech Stack
 
 - **Frontend**: React 18 with Hooks
@@ -98,6 +114,7 @@ http://localhost:3000
 - **Voice**: Web Speech API (SpeechRecognition + SpeechSynthesis)
 - **State Management**: React useState
 - **Build Tool**: Vite
+- **Deployment**: Netlify (configured)
 - **Storage**: In-memory (upgradeable to localStorage)
 
 ## 📱 Portals Overview
