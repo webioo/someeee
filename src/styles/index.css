@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer utilities {
+  .animate-sound-wave {
+    animation: soundwave 0.8s ease-in-out infinite;
+  }
+
+  @keyframes soundwave {
+    0%, 100% {
+      height: 20px;
+    }
+    50% {
+      height: 40px;
+    }
+  }
+}
