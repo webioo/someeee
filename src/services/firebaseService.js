@@ -47,21 +47,27 @@ export const subscribeToComplaints = (callback) => {
   }
 
   try {
+    console.log('🔄 Setting up complaints listener...');
     const complaintsRef = collection(db, COLLECTIONS.COMPLAINTS);
-    const q = query(complaintsRef, orderBy('timestamp', 'desc'));
+    // Removed orderBy to avoid index requirement - will sort in client
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(complaintsRef, (snapshot) => {
+      console.log('📡 Complaints snapshot received, processing...');
       const complaints = [];
       snapshot.forEach((doc) => {
         complaints.push({ id: doc.id, ...doc.data() });
       });
+      // Sort by timestamp on client side
+      complaints.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       console.log(`📩 Received ${complaints.length} complaints from Firebase`);
       callback(complaints);
     }, (error) => {
-      console.error('Error fetching complaints:', error);
+      console.error('❌ Error fetching complaints:', error);
+      console.error('Error details:', error.message, error.code);
     });
   } catch (error) {
-    console.error('Error setting up complaints subscription:', error);
+    console.error('❌ Error setting up complaints subscription:', error);
+    console.error('Error details:', error.message);
     return () => {};
   }
 };
@@ -121,9 +127,11 @@ export const subscribeToOfficers = (callback) => {
   }
 
   try {
+    console.log('🔄 Setting up officers listener...');
     const officersRef = collection(db, COLLECTIONS.OFFICERS);
 
     return onSnapshot(officersRef, (snapshot) => {
+      console.log('📡 Officers snapshot received, processing...');
       const officers = [];
       snapshot.forEach((doc) => {
         officers.push({ id: doc.id, ...doc.data() });
@@ -131,10 +139,12 @@ export const subscribeToOfficers = (callback) => {
       console.log(`👮 Received ${officers.length} officers from Firebase`);
       callback(officers);
     }, (error) => {
-      console.error('Error fetching officers:', error);
+      console.error('❌ Error fetching officers:', error);
+      console.error('Error details:', error.message, error.code);
     });
   } catch (error) {
-    console.error('Error setting up officers subscription:', error);
+    console.error('❌ Error setting up officers subscription:', error);
+    console.error('Error details:', error.message);
     return () => {};
   }
 };
