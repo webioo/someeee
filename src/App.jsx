@@ -111,23 +111,37 @@ function AppContent() {
       complaints
     );
 
-    const newComplaint = {
-      ...newComplaintData,
-      id: complaints.length + 1,
-      assignedOfficer: assignedOfficerId
-    };
-
-    // Update local state immediately for responsiveness
-    setComplaints([...complaints, newComplaint]);
-
-    // Sync with Firebase
+    // Sync with Firebase first to get the real Firebase ID
     if (isFirebaseAvailable()) {
       try {
-        await firebaseAddComplaint(newComplaint);
-        console.log('✅ Complaint synced to Firebase');
+        // Firebase will generate the ID and return the complete complaint
+        const firebaseComplaint = await firebaseAddComplaint({
+          ...newComplaintData,
+          assignedOfficer: assignedOfficerId
+        });
+        console.log('✅ Complaint synced to Firebase with ID:', firebaseComplaint.id);
+
+        // Update local state with Firebase ID (not needed as real-time listener will update)
+        // The onSnapshot listener will automatically add this complaint to state
       } catch (error) {
         console.error('❌ Failed to sync complaint to Firebase:', error);
+
+        // Fallback: add to local state with numeric ID if Firebase fails
+        const newComplaint = {
+          ...newComplaintData,
+          id: `local_${Date.now()}`,
+          assignedOfficer: assignedOfficerId
+        };
+        setComplaints([...complaints, newComplaint]);
       }
+    } else {
+      // No Firebase: use local ID
+      const newComplaint = {
+        ...newComplaintData,
+        id: `local_${Date.now()}`,
+        assignedOfficer: assignedOfficerId
+      };
+      setComplaints([...complaints, newComplaint]);
     }
   };
 
