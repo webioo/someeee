@@ -58,17 +58,26 @@ function AppContent() {
 
     // Subscribe to complaints
     const unsubscribeComplaints = subscribeToComplaints((firebaseComplaints) => {
-      if (firebaseComplaints.length > 0) {
-        console.log(`✅ Synced ${firebaseComplaints.length} complaints from Firebase`);
-        setComplaints(firebaseComplaints);
-      }
+      console.log(`✅ Synced ${firebaseComplaints.length} complaints from Firebase`);
+      setComplaints(firebaseComplaints);
     });
 
     // Subscribe to officers
     const unsubscribeOfficers = subscribeToOfficers((firebaseOfficers) => {
+      console.log(`✅ Synced ${firebaseOfficers.length} officers from Firebase`);
+      // If Firebase has officers, use them. Otherwise, keep using initial officers from localStorage
       if (firebaseOfficers.length > 0) {
-        console.log(`✅ Synced ${firebaseOfficers.length} officers from Firebase`);
         setOfficers(firebaseOfficers);
+      } else {
+        // Firebase is empty, push initial officers to Firebase
+        console.log('📤 Pushing initial officers to Firebase...');
+        initialOfficers.forEach(async (officer) => {
+          try {
+            await firebaseAddOfficer(officer);
+          } catch (error) {
+            console.error('Error adding officer to Firebase:', error);
+          }
+        });
       }
     });
 
